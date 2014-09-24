@@ -72,7 +72,7 @@ public class ChooseCutoff {
         aux = new String[problemSize];
     }
     
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testArrayCopy() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         return a;
@@ -241,7 +241,7 @@ public class ChooseCutoff {
     }
     
     
-//    @GenerateMicroBenchmark
+//    @Benchmark
 //    public Comparable[] testInsertion() {
 //        System.arraycopy(stringData, 0, a, 0, problemSize);
 //        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
@@ -250,7 +250,7 @@ public class ChooseCutoff {
 //        return a;
 //    }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMerge() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new Merge();
@@ -260,7 +260,7 @@ public class ChooseCutoff {
         return a;
     }
     
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new Insertion();
@@ -270,7 +270,7 @@ public class ChooseCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeInsertionX() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new InsertionX();
@@ -281,7 +281,7 @@ public class ChooseCutoff {
     }
 
     /*
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeInsertionAC() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new InsertionAC();
@@ -292,7 +292,7 @@ public class ChooseCutoff {
     }
     */
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeBinaryInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertion();
@@ -302,7 +302,7 @@ public class ChooseCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeBinaryInsertionX() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertionX();
@@ -313,7 +313,7 @@ public class ChooseCutoff {
     }
 
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new Insertion();
@@ -323,7 +323,7 @@ public class ChooseCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertion();
@@ -333,7 +333,7 @@ public class ChooseCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertionX() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertionX();
@@ -347,7 +347,7 @@ public class ChooseCutoff {
     
 
 
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testMergeX() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -357,7 +357,7 @@ public class ChooseCutoff {
         return a;
     }
 
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testMergeXBinary() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {

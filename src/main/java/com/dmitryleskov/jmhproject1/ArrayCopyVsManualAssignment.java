@@ -57,7 +57,7 @@ public class ArrayCopyVsManualAssignment {
         a = new String[problemSize];
     }
     
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testArrayCopy() {
         for(int i = problemSize - chunkSize - 1; i >= 0; i -= chunkSize) {
             System.arraycopy(a, i, a, i+1, chunkSize);
@@ -65,7 +65,7 @@ public class ArrayCopyVsManualAssignment {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testManualCopy() {
         for(int i = problemSize - chunkSize - 1; i >= 0; i -= chunkSize) {
             for(int j = i + chunkSize - 1; j >= i; j--) a[j+1] = a[j];

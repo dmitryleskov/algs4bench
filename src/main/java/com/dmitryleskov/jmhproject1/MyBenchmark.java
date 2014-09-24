@@ -85,7 +85,7 @@ public class MyBenchmark {
     }
    
     
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testSort() {
         Comparable[] a = integerData.clone();
         sort(sortMethod, a);

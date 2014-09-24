@@ -43,7 +43,7 @@ public class BinaryToSimpleInsertionCutoff {
         aux = new String[problemSize];
     }
     
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testArrayCopy() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         return a;
@@ -206,7 +206,7 @@ public class BinaryToSimpleInsertionCutoff {
         a[j] = swap;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new Insertion();
@@ -216,7 +216,7 @@ public class BinaryToSimpleInsertionCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testInsertionX() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new InsertionX();
@@ -225,7 +225,7 @@ public class BinaryToSimpleInsertionCutoff {
         }
         return a;
     }
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testInsertionAC() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new InsertionAC();
@@ -235,7 +235,7 @@ public class BinaryToSimpleInsertionCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertion();
@@ -245,7 +245,7 @@ public class BinaryToSimpleInsertionCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertionShortCircuit() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertionShortCircuit();
@@ -255,7 +255,7 @@ public class BinaryToSimpleInsertionCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertionDoubleCompare() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertionDoubleCompare();
@@ -265,7 +265,7 @@ public class BinaryToSimpleInsertionCutoff {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertionX() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertionX();

@@ -61,7 +61,7 @@ public class CompareSorts {
         stringData = TestDataGenerator.asStringArray(data.getIntData("sorted"));
     }
     
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testArrayCopy() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -70,7 +70,7 @@ public class CompareSorts {
         return a;
     }
     
-//    @GenerateMicroBenchmark
+//    @Benchmark
     public Comparable[] testInsertionX() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -80,7 +80,7 @@ public class CompareSorts {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testBinaryInsertionX() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -90,7 +90,7 @@ public class CompareSorts {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMerge() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -100,7 +100,7 @@ public class CompareSorts {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeX() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
@@ -110,7 +110,7 @@ public class CompareSorts {
         return a;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public Comparable[] testMergeXBinary() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
