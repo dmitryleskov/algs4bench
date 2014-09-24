@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.dmitryleskov.jmhproject1;
+package com.dmitryleskov.algs4bench;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,92 +37,64 @@ import org.openjdk.jmh.runner.options.*;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
 @State(Scope.Benchmark)
-public class CompareSorts {
+public class MyBenchmark {
 
 //    @Param({"MergeX", "MergeXBinary"})
 //    public String algorithm;
 
-//    @Param({"2", "4", "8", "16", "32", "64", "128"})
-    @Param({"2", "32", "512"})
-    public int problemSize;
+
+    private static final int problemSize = 100000;
+    private static final String algorithm = "MergeXBinary";
     
     public TestDataGenerator data;
     
     public Integer[] integerData;
-    public String[] stringData;
+    
+    // One cannot refer to classes in the default package from a named package,
+    // hence all this fiddling with reflection
+    public Method sortMethod;
+
+    
     
     @Setup
     public void init() {
         data = new TestDataGenerator(problemSize);
-        integerData = TestDataGenerator.asIntegerArray(data.getIntData("sorted"));
-        stringData = TestDataGenerator.asStringArray(data.getIntData("sorted"));
+        integerData = TestDataGenerator.asIntegerArray(data.getIntData("shuffled"));
+        try {
+            sortMethod = Class.forName(algorithm).getDeclaredMethod("sort", Comparable[].class);
+        } catch (ClassNotFoundException ex) {
+            System.out.println("No such class: " + algorithm);
+        } catch (NoSuchMethodException ex) {
+            System.out.println("Class " + algorithm + " has no static method sort(Comparable[])");
+        }
     }
+
+    public Comparable[] sort(Method m, Comparable[] a) {
+        try {
+            m.invoke(null, (Object) a);
+        } catch (SecurityException |
+                IllegalAccessException |
+                IllegalArgumentException |
+                InvocationTargetException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return a;
+    }
+   
     
-//    @Benchmark
-    public Comparable[] testArrayCopy() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
-    
-//    @Benchmark
-    public Comparable[] testInsertionX() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            InsertionX.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
-
     @Benchmark
-    public Comparable[] testBinaryInsertionX() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            BinaryInsertionX.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
-
-    @Benchmark
-    public Comparable[] testMerge() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            Merge.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
-
-    @Benchmark
-    public Comparable[] testMergeX() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            MergeX.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
-
-    @Benchmark
-    public Comparable[] testMergeXBinary() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            MergeXBinary.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
+    public Comparable[] testSort() {
+        Comparable[] a = integerData.clone();
+        sort(sortMethod, a);
         return a;
     }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(".*" + CompareSorts.class.getSimpleName() + ".*")
+                .include(".*" + MyBenchmark.class.getSimpleName() + ".*")
                 .forks(1)
                 .jvmArgs("-server")
                 .build();

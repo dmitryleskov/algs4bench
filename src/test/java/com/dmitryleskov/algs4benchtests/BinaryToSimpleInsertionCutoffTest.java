@@ -4,8 +4,9 @@
  * and open the template in the editor.
  */
 
-package com.dmitryleskov.jmhproject1;
+package com.dmitryleskov.algs4benchtests;
 
+import com.dmitryleskov.algs4bench.BinaryToSimpleInsertionCutoff;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

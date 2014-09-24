@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.dmitryleskov.jmhproject1;
+package com.dmitryleskov.algs4bench;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

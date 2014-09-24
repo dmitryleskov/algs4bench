@@ -1,4 +1,4 @@
-package com.dmitryleskov.jmhproject1;
+package com.dmitryleskov.algs4bench;
 
 
 import java.util.HashMap;
