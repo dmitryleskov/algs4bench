@@ -36,8 +36,8 @@ import org.openjdk.jmh.runner.options.*;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+//@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+//@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
 @State(Scope.Benchmark)
 public class ChooseCutoff {
@@ -45,9 +45,12 @@ public class ChooseCutoff {
 //    @Param({"MergeX", "MergeXBinary"})
 //    public String algorithm;
 
-    //@Param({"2", "4", "8", "16", "32", "64", "128"})
+    @Param({"sorted", "reverse", "random"})
+    public String test;
+    
+//    @Param({"2", "4", "8", "16", "32", "64", "128"})
 //    @Param({"8", "10", "12", "14", "16", "18", "20"})
-    @Param({"8", "12", "16", "20", "24", "32"})
+    @Param({"8", "12", "16", "20", "24", "28", "32"})
 //    @Param({"12", "14", "16"})
     public int chunkSize;
 
@@ -63,8 +66,8 @@ public class ChooseCutoff {
     @Setup
     public void init() {
         data = new TestDataGenerator(problemSize);
-        integerData = TestDataGenerator.asIntegerArray(data.getIntData("reverse"));
-        stringData = TestDataGenerator.asStringArray(data.getIntData("reverse"));
+        integerData = TestDataGenerator.asIntegerArray(data.getIntData(test));
+        stringData = TestDataGenerator.asStringArray(data.getIntData(test));
         a = new String[problemSize];
         aux = new String[problemSize];
     }
@@ -87,41 +90,73 @@ public class ChooseCutoff {
             else if (less(aux[j], aux[i])) a[k] = aux[j++];   // to ensure stability
             else                           a[k] = aux[i++];
         }
+        assert isSorted(a, lo, hi);
     }
     
     private interface Sorter {
         public void sort(Comparable[] a, int lo, int hi);
     }
     
+    private class Merge implements Sorter {
+        @Override
+        public void sort(Comparable[] a, int lo, int hi) {
+            if (hi <= lo) return;
+            int mid = lo + (hi - lo) / 2;
+            sort(a, lo, mid);
+            sort(a, mid + 1, hi);
+            merge(a, lo, mid, hi);
+            assert isSorted(a, lo, hi);
+        }
+        private void merge(Comparable[] a, int lo, int mid, int hi) {
+            // copy to aux[]
+            for (int k = lo; k <= hi; k++) {
+                aux[k] = a[k];
+            }
+            // merge back to a[]
+            int i = lo, j = mid + 1;
+            for (int k = lo; k <= hi; k++) {
+                if (i > mid) {
+                    a[k] = aux[j++];   // this copying is unnecessary
+                } else if (j > hi) {
+                    a[k] = aux[i++];
+                } else if (less(aux[j], aux[i])) {
+                    a[k] = aux[j++];
+                } else {
+                    a[k] = aux[i++];
+                }
+            }
+        }
+
+    }
+    
     private class Insertion implements Sorter {
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
             for (int i = lo; i <= hi; i++)
                 for (int j = i; j > lo && less(a[j], a[j-1]); j--)
                     exch(a, j, j-1);
+            assert isSorted(a, lo, hi);
         }
     }    
 
     private class InsertionX implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
             for (int i = lo; i <= hi; i++) {
                 Comparable v = a[i];
-                int j;
-                for (j = i - 1; j >= lo && less(v, a[j]); j--);
-                j++;
-                if (j < i) {
-                    for (int k = i; k > j; k--) {
-                        a[k] = a[k - 1];
-                    }
-                    a[j] = v;
+                for (int j = i - 1; j >= lo; j--) {
+                    Comparable w = a[j];
+                    if (less(v, w)) a[j+1] = w;
+                    else {a[j+1] = v; break;}
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }
 
-    
+    /* Slower than Insertion on small inputs, slower than BinaryInsertionX on larger
     private class InsertionAC implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
             for (int i = lo; i <= hi; i++) {
                 Comparable v = a[i];
@@ -133,15 +168,14 @@ public class ChooseCutoff {
                     a[j] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }
-    
+    */
     private class BinaryInsertion implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
-
             for (int i = lo + 1; i <= hi; i++) {
-
                 if (less(a[i], a[i-1])) {
     //                int k = binarySearch(a, lo, i-1);
                     Comparable v = a[i];
@@ -162,42 +196,30 @@ public class ChooseCutoff {
                     a[k] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }    
 
     private class BinaryInsertionX implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
-            for (int i = lo + 1; i <= (hi < lo + 4 ? hi : lo + 4); i++) {
-                for (int j = i; j > lo && less(a[j], a[j-1]); j--)
-                    exch(a, j, j-1);
-            }
-
-            for (int i = lo + 5; i <= hi; i++) {
-
+            for (int i = lo + 1; i <= hi; i++) {
                 if (less(a[i], a[i-1])) {
-    //                int k = binarySearch(a, lo, i-1);
                     Comparable v = a[i];
                     int lolo = lo;
-                    int hihi = i-1;
-                    int k = lo;
+                    int hihi = i-2;
                     while (lolo <= hihi) {
                         int mid = lolo + (hihi - lolo) / 2;
                         if (less(v, a[mid])) hihi = mid - 1;
-                        else if (less(v, a[mid+1])) { k = mid+1; break;}
-                        else lolo=mid+1;
+                        else lolo = mid+1;
                     }
-
-    //                for (int j = i; j > k; j--) {
-    //                    a[j] = a[j-1];
-    //                }
-                    System.arraycopy(a, k, a, k+1, i-k);
-                    a[k] = v;
+                    System.arraycopy(a, lolo, a, lolo+1, i-lolo);
+                    a[lolo] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }    
-    
     
     
     @SuppressWarnings("unchecked")
@@ -211,6 +233,14 @@ public class ChooseCutoff {
         a[j] = swap;
     }
     
+    // is the array sorted from a[lo] to a[hi]?
+    private static boolean isSorted(Comparable[] a, int lo, int hi) {
+        for (int i = lo + 1; i <= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
+    
+    
 //    @GenerateMicroBenchmark
 //    public Comparable[] testInsertion() {
 //        System.arraycopy(stringData, 0, a, 0, problemSize);
@@ -221,6 +251,16 @@ public class ChooseCutoff {
 //    }
 
     @GenerateMicroBenchmark
+    public Comparable[] testMerge() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new Merge();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            lastMerge(sorter, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+    
+    @GenerateMicroBenchmark
     public Comparable[] testMergeInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new Insertion();
@@ -229,6 +269,28 @@ public class ChooseCutoff {
         }
         return a;
     }
+
+    @GenerateMicroBenchmark
+    public Comparable[] testMergeInsertionX() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new InsertionX();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            lastMerge(sorter, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+
+    /*
+    @GenerateMicroBenchmark
+    public Comparable[] testMergeInsertionAC() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new InsertionAC();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            lastMerge(sorter, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+    */
 
     @GenerateMicroBenchmark
     public Comparable[] testMergeBinaryInsertion() {
@@ -284,15 +346,6 @@ public class ChooseCutoff {
     
     
 
-//    @GenerateMicroBenchmark
-    public Comparable[] testMerge() {
-        Comparable[] a = stringData.clone();
-        for (int i = 0; i <= 10000/problemSize; i++) {
-            Merge.sort(a);
-            System.arraycopy(stringData, 0, a, 0, problemSize);
-        }
-        return a;
-    }
 
 //    @GenerateMicroBenchmark
     public Comparable[] testMergeX() {
