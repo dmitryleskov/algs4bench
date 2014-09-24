@@ -46,12 +46,22 @@ public class TestDataGenerator {
             }
         }
         data.put("inversions", inversions);
-        Random r = new Random();
+
+        Random r = new Random(0);
         int[] random = new int[problemSize];
         for (int i = 0; i < problemSize; i++) {
-            random[i] = r.nextInt(problemSize < 20 ? 2 : problemSize/10);
+            random[i] = r.nextInt();
         }
         data.put("random", random);
+
+        r.setSeed(0);
+        int[] randomWithRepeats = new int[problemSize];
+        for (int i = 0; i < problemSize; i++) {
+            randomWithRepeats[i] = r.nextInt(problemSize < 20 ? 2 : problemSize/10);
+        }
+        data.put("randomWithRepeats", randomWithRepeats);
+
+        r.setSeed(0);
         int[] shuffled = new int[problemSize];
         for (int i = 0; i < problemSize; i++) {
             shuffled[i] = i;
