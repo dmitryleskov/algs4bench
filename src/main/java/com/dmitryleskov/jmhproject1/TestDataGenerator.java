@@ -103,7 +103,7 @@ public class TestDataGenerator {
     public static String[] asStringArray(int[] intArray) {
         String[] array = new String[intArray.length];
         for (int i = 0; i < intArray.length; i++) { 
-            array[i] = String.format("0123456789%010d", intArray[i]); 
+            array[i] = String.format("ABCDEFGHIJKLMNOPQRSTUVWYZ0123456789%010d", intArray[i]); 
         }
         return array;
     }
