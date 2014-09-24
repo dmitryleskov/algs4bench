@@ -1,26 +1,6 @@
 /*
- * Copyright (c) 2005, 2014, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
+ * Originally (c) 2014 Dmitry Leskov, http://www.dmitryleskov.com
+ * Released into the public domain under the Unlicense, http://unlicense.org
  */
 
 package com.dmitryleskov.jmhproject1;
@@ -38,14 +18,13 @@ import org.openjdk.jmh.runner.options.*;
 @State(Scope.Benchmark)
 public class BinaryToSimpleInsertionCutoff {
 
-//    @Param({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
-    @Param({"4", "6", "8"})
-    public int cutoff;
-
-    @Param({"reverse", "shuffled", /*"sorted"*/})
+    @Param({"sorted", "reverse", "random"})
     public String test;
-    
-    public int chunkSize = 16;
+
+    final public int chunkSize = 12;
+
+    @Param({"4", "5", "6", "7"})
+    public int cutoff;
 
     public static final int problemSize = 1024*1024;
     
@@ -79,6 +58,7 @@ public class BinaryToSimpleInsertionCutoff {
             for (int i = lo; i <= hi; i++)
                 for (int j = i; j > lo && less(a[j], a[j-1]); j--)
                     exch(a, j, j-1);
+            assert isSorted(a, lo, hi);
         }
     }    
 
@@ -97,6 +77,7 @@ public class BinaryToSimpleInsertionCutoff {
                     a[j] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }
 
@@ -114,72 +95,104 @@ public class BinaryToSimpleInsertionCutoff {
                     a[j] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }
     
     private class BinaryInsertion implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
-
             for (int i = lo + 1; i <= hi; i++) {
+                Comparable v = a[i];
+                int lolo = lo;
+                int hihi = i - 1;
+                while (lolo <= hihi) {
+                    int mid = lolo + (hihi - lolo) / 2;
+                    if (less(v, a[mid])) hihi = mid - 1;
+                    else lolo = mid + 1;
+                }
+                System.arraycopy(a, lolo, a, lolo + 1, i - lolo);
+                a[lolo] = v;
+            }
+            assert isSorted(a, lo, hi);
+        }
+    }    
 
-                if (less(a[i], a[i-1])) {
-    //                int k = binarySearch(a, lo, i-1);
+    private class BinaryInsertionShortCircuit implements Sorter {
+        @Override
+        public void sort(Comparable[] a, int lo, int hi) {
+            for (int i = lo + 1; i <= hi; i++) {
+                if (less(a[i], a[i - 1])) {
                     Comparable v = a[i];
                     int lolo = lo;
-                    int hihi = i-1;
-                    int k = lo;
+                    int hihi = i - 2;
                     while (lolo <= hihi) {
                         int mid = lolo + (hihi - lolo) / 2;
                         if (less(v, a[mid])) hihi = mid - 1;
-                        else if (less(v, a[mid+1])) { k = mid+1; break;}
-                        else lolo=mid+1;
+                        else lolo = mid+1;
                     }
-
-    //                for (int j = i; j > k; j--) {
-    //                    a[j] = a[j-1];
-    //                }
-                    System.arraycopy(a, k, a, k+1, i-k);
-                    a[k] = v;
+                    System.arraycopy(a, lolo, a, lolo + 1, i - lolo);
+                    a[lolo] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
+        }
+    }    
+    
+    private class BinaryInsertionDoubleCompare implements Sorter {
+        @Override
+        public void sort(Comparable[] a, int lo, int hi) {
+            for (int i = lo + 1; i <= hi; i++) {
+                if (less(a[i], a[i - 1])) {
+                    Comparable v = a[i];
+                    int lolo = lo;
+                    int hihi = i - 2;
+                    while (lolo <= hihi) {
+                        int mid = lolo + (hihi - lolo) / 2;
+                        if (less(v, a[mid])) hihi = mid - 1;
+                        else {
+                            lolo = mid + 1;
+                            if (less(v, a[lolo])) break;
+                        }
+                    }
+                    System.arraycopy(a, lolo, a, lolo + 1, i - lolo);
+                    a[lolo] = v;
+                }
+            }
+            assert isSorted(a, lo, hi);
         }
     }    
 
     public class BinaryInsertionX implements Sorter {
-
+        @Override
         public void sort(Comparable[] a, int lo, int hi) {
             int simple = hi < lo + cutoff ? hi : lo + cutoff; // cutoff position
             for (int i = lo + 1; i <= simple; i++) {
-                for (int j = i; j > lo && less(a[j], a[j-1]); j--)
-                    exch(a, j, j-1);
+                Comparable v = a[i];
+                int j = i-1;
+                while (j >= lo && less(v, a[j])) {
+                    a[j+1] = a[j];
+                    j--;
+                }
+                a[j+1] = v;
             }
-
             for (int i = lo + cutoff + 1; i <= hi; i++) {
-
                 if (less(a[i], a[i-1])) {
-    //                int k = binarySearch(a, lo, i-1);
                     Comparable v = a[i];
                     int lolo = lo;
-                    int hihi = i-1;
-                    int k = lo;
+                    int hihi = i-2;
                     while (lolo <= hihi) {
                         int mid = lolo + (hihi - lolo) / 2;
                         if (less(v, a[mid])) hihi = mid - 1;
-                        else if (less(v, a[mid+1])) { k = mid+1; break;}
-                        else lolo=mid+1;
+                        else lolo = mid+1;
                     }
-
-    //                for (int j = i; j > k; j--) {
-    //                    a[j] = a[j-1];
-    //                }
-                    System.arraycopy(a, k, a, k+1, i-k);
-                    a[k] = v;
+                    System.arraycopy(a, lolo, a, lolo+1, i-lolo);
+                    a[lolo] = v;
                 }
             }
+            assert isSorted(a, lo, hi);
         }
     }    
-    
     
     
     @SuppressWarnings("unchecked")
@@ -204,9 +217,48 @@ public class BinaryToSimpleInsertionCutoff {
     }
 
     @GenerateMicroBenchmark
+    public Comparable[] testInsertionX() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new InsertionX();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            sorter.sort(a, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+    @GenerateMicroBenchmark
+    public Comparable[] testInsertionAC() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new InsertionAC();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            sorter.sort(a, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+
+    @GenerateMicroBenchmark
     public Comparable[] testBinaryInsertion() {
         System.arraycopy(stringData, 0, a, 0, problemSize);
         Sorter sorter = new BinaryInsertion();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            sorter.sort(a, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+
+    @GenerateMicroBenchmark
+    public Comparable[] testBinaryInsertionShortCircuit() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new BinaryInsertionShortCircuit();
+        for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
+            sorter.sort(a, lo, lo+chunkSize-1);
+        }
+        return a;
+    }
+
+    @GenerateMicroBenchmark
+    public Comparable[] testBinaryInsertionDoubleCompare() {
+        System.arraycopy(stringData, 0, a, 0, problemSize);
+        Sorter sorter = new BinaryInsertionDoubleCompare();
         for (int lo = 0; lo < problemSize-chunkSize; lo += chunkSize) {
             sorter.sort(a, lo, lo+chunkSize-1);
         }
@@ -222,10 +274,17 @@ public class BinaryToSimpleInsertionCutoff {
         }
         return a;
     }
+    
+    // is the array sorted from a[lo] to a[hi]?
+    private static boolean isSorted(Comparable[] a, int lo, int hi) {
+        for (int i = lo + 1; i <= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(".*" + BinaryToSimpleInsertionCutoff.class.getSimpleName() + ".*")
+                .include(".*" + BinaryToSimpleInsertionCutoff.class.getSimpleName() + ".*BinaryInsertionX.*")
                 .forks(1)
                 .jvmArgs("-server")
                 .build();
