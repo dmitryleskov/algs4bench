@@ -114,7 +114,7 @@ public class CompareSorts {
     public Comparable[] testMergeXBinary() {
         Comparable[] a = stringData.clone();
         for (int i = 0; i <= 10000/problemSize; i++) {
-            MergeX.sort(a);
+            MergeXBinary.sort(a);
             System.arraycopy(stringData, 0, a, 0, problemSize);
         }
         return a;
